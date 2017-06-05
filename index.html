@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Marie D'Elbée</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <script src="js/d3.min.js"></script>
+    <script src="js/spin.min.js"></script>
+    <style>
+
+body, html {
+    margin: 0px;
+    padding: 0px;
+    height: 100%;
+    width: 100%;
+    background-color: black;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+#overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 0, 0, 0.4);
+}
+
+* {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+video {
+    height: 100%;
+    width: 100%;
+}
+
+#video2 {
+    display: none;
+}
+
+#overlay {
+    width: 100%;
+    height: 100%;
+    background-color: black;
+}
+
+#spinner {
+    display : none;
+}
+
+    </style>
+
+
+</head>
+<body class="notSelectable">
+
+
+    <div id="spinner" style="opacity:1"></div>
+
+    <div id="overlay"></div>
+
+    <video id="video1" width="100%" height="100%" loop="true" autoplay="true" poster="video/poster.jpg">
+        <source src="video/deep_space_44_faststart.mp4" type="video/mp4">
+        <source src="video/deep_space_44.ogg" type="video/ogg">
+    </video>
+
+    <video class="notSelectable" id="video2" loop="true" poster="video/poster2.jpg"  muted="true">
+        <source src="video/deep_space_2_faststart.mp4" type="video/mp4">
+        <source src="video/deep_space_2.ogg" type="video/ogg">
+    </video> 
+
+    <script>
+
+var video1 = d3.select('#video1')
+var video2 = d3.select('#video2')
+
+var visibleVideo = video1
+var hadFirstTouch = false
+
+var canPlayCount = 0
+
+function switchTo2(){
+    video2.node().play()
+    video1.style('display', 'none')
+    video2.style('display', 'block')
+    video1.node().muted = true
+    video2.node().muted = false
+    visibleVideo = video2
+}
+
+function switchTo1(){
+    video1.node().play()
+    video2.style('display', 'none')
+    video1.style('display', 'block')
+    video1.node().muted = false
+    video2.node().muted = true
+    visibleVideo = video1
+}
+
+video1.on('touchstart', function(){
+    d3.event.preventDefault()
+    if (!hadFirstTouch){
+        video1.node().play()
+        hadFirstTouch = true
+    }else{
+        switchTo2()
+    }    
+})
+
+video1.on('click', function(){
+    switchTo2()
+})
+
+video2.on('click', function(){
+    switchTo1()
+})
+
+video2.on('touchstart', function(){
+    console.log('got d3 touchstart handler')
+    d3.event.preventDefault()
+    switchTo1()
+})
+
+video1.on('canplay', function(){
+    console.log('video1 can play')
+    canPlayCount++
+    checkIfReady()
+})
+
+video2.on('canplay', function(){
+    console.log('video 2 can play')
+    canPlayCount++
+    checkIfReady()
+})
+
+var spinnerElement = d3.select('#spinner')
+
+function showSpinner(){
+    console.log('showing spinner')
+    spinnerElement.style('display', 'block')
+}
+
+function removeOverlay(){
+
+    d3.select('.spinner') // not the container, the element inside (with class = 'spinner')
+        .style('opacity', 1)
+        .transition()
+        .duration(200)
+        .style('opacity', 0)
+        .each('end', function(){
+            d3.select('#overlay')
+                .style('opacity', 1)
+                .transition()
+                .duration(1000)
+                .style('opacity', 0)
+                .each('end', function(){
+                    d3.select('#spinner').style('display', 'none')
+                    d3.select('#overlay').style('display', 'none')
+                })
+        })
+}
+
+var showSpinnerTimeout = setTimeout(showSpinner, 3000)
+
+function checkIfReady(){
+    if (canPlayCount == 2){
+        clearTimeout(showSpinnerTimeout)
+        removeOverlay()
+    }
+}
+
+video1.node().load()
+video2.node().load()
+
+video1.node().play()
+video2.node().play()
+
+
+var opts = {
+  lines: 7 // The number of lines to draw
+, length: 28 // The length of each line
+, width: 14 // The line thickness
+, radius: 42 // The radius of the inner circle
+, scale: 1 // Scales overall size of the spinner
+, corners: 1 // Corner roundness (0..1)
+, color: '#FFF' // #rgb or #rrggbb or array of colors
+, opacity: 0.2 // Opacity of the lines
+, rotate: 0 // The rotation offset
+, direction: 1 // 1: clockwise, -1: counterclockwise
+, speed: 0.5 // Rounds per second
+, trail: 92 // Afterglow percentage
+, fps: 20 // Frames per second when using setTimeout() as a fallback for CSS
+, zIndex: 2e9 // The z-index (defaults to 2000000000)
+, className: 'spinner' // The CSS class to assign to the spinner
+, top: '50%' // Top position relative to parent
+, left: '50%' // Left position relative to parent
+, shadow: false // Whether to render a shadow
+, hwaccel: false // Whether to use hardware acceleration
+, position: 'absolute' // Element positioning
+}
+
+var spinner = new Spinner(opts).spin(spinnerElement.node());
+    
+    </script>
+</body>
+</html>
